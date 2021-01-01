@@ -1,6 +1,9 @@
 const axios = require("axios")
 const { exec } = require('child_process');
 const schedule = require("node-schedule")
+//to get directory path
+const path = require('path');
+const fs = require('fs');
 
 let userClips = [];
 let gameClips = [];
@@ -38,7 +41,6 @@ schedule.scheduleJob({hour: 0, minute: 0}, function(){ // this fetches the top c
 // or just call "fetchClips()" if you want to download directly
 fetchClips()
 
-
 // Choose clips amount:
 let clipsAmount = 5; // this will download top 5 clips to your "CLIPS" folder
 
@@ -47,6 +49,8 @@ let clipsDate = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)).toISOStri
 // let clipsDate = new Date(new Date().getTime() - (168 * 60 * 60 * 1000)).toISOString(); // From when clip was created, 7 days ago
 // let clipsDate = new Date(new Date().getTime() - (720 * 60 * 60 * 1000)).toISOString(); // From when clip was created, 30 Days ago
 // let clipsDate = new Date(new Date().getTime() - (8760 * 60 * 60 * 1000)).toISOString(); // From when clip was created, 1 Year ago
+
+let outputPath = `${__dirname}\\CLIPS` // If you want to change output path make sure that the "youtube-dl.exe" file is included
 
 // ############ CONFIGURATION ############
 
@@ -197,10 +201,37 @@ const Combine = (gameClips, userClips) => {
 
 // Download the actual clips
 function downloadClip(url) {
-  exec(`youtube-dl.exe -f best ${url}`, {cwd: `${__dirname}\\CLIPS`}, (err, stdout, stderr) => {
+  exec(`youtube-dl.exe -f best ${url}`, {cwd: `${outputPath}/${clipsPath}`}, (err, stdout, stderr) => {
   if (err) return;
   // the *entire* stdout and stderr (buffered)
   console.log(`stdout: ${stdout}`);
   console.log(`stderr: ${stderr}`);
   });
 }
+
+
+let clipsPath = 0;
+makeFolder()
+function makeFolder() {
+  clipsPath = 0;
+  // Finds what the folder name should be called (in this case its integers that increments)
+  fs.readdir(`${outputPath}`, function (err, files) {
+    if (err) return console.log('Unable to scan directory: ' + err);
+
+    //listing all files using forEach
+    files.forEach(function (file) {
+        // console.log(file);
+        clipsPath++
+    });
+    setPath()
+  });
+}
+// Create a new folder for the clips
+function setPath() {
+  exec(`mkdir ${clipsPath}`, {cwd: `${outputPath}`}, (err, stdout, stderr) => {
+  if (err) return;
+  // the *entire* stdout and stderr (buffered)
+  console.log(`Standard Output: ${stdout}`);
+  console.log(`Standard Error: ${stderr}`);
+  });
+} 
