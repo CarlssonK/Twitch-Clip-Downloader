@@ -2,34 +2,6 @@ const axios = require("axios")
 const { exec } = require('child_process');
 const schedule = require("node-schedule")
 
-
-
-// ############ CONFIGURATION ############
-
-// Create an application on https://dev.twitch.tv/console to get your client id and client secret
-const clientId = "your_client_id_here"
-const clientSecret = "your_client_secret_here" // note your client secret is private thus should not be shown to other people
-
-// EXECUTION TIMES
-schedule.scheduleJob({hour: 0, minute: 0}, function(){
-  fetchClips()
-});
-schedule.scheduleJob({hour: 6, minute: 0}, function(){
-  fetchClips()
-});
-schedule.scheduleJob({hour: 12, minute: 0}, function(){
-  fetchClips()
-});
-schedule.scheduleJob({hour: 18, minute: 0}, function(){
-  fetchClips()
-});
-
-// ############ CONFIGURATION ############
-
-
-
-
-
 let userClips = [];
 let gameClips = [];
 let userCounter = 0;
@@ -37,21 +9,8 @@ let gameCounter = 0;
 let isUserClipsFetched = false;
 let isGameClipsFetched = false;
 
-// Save clips url, saves clips uploaded to youtube, so if we get the same clips 2 times we wont upload it to youtube
-let saveClips = [];
-
-
-function reset() {
-  userClips = [];
-  gameClips = [];
-  userCounter = 0;
-  gameCounter = 0;
-  isUserClipsFetched = false;
-  isGameClipsFetched = false;
-}
-
-
 const fetchClips = async () => {
+  console.log(`FETCHING CLIPS...`)
   try {
     // First fetch access token so we can use the API
     const res = await axios.post(`https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`)
@@ -64,6 +23,35 @@ const fetchClips = async () => {
     console.error("ERROR!", err)
   }
 }
+
+
+// ############ CONFIGURATION ############
+
+// Create an application on https://dev.twitch.tv/console to get your client id and client secret
+const clientId = "your_client_id_here"
+const clientSecret = "your_client_secret_here" // note your client secret is private thus should not be shown to other people
+
+// EXECUTION TIMES (Schedule when to download)
+schedule.scheduleJob({hour: 0, minute: 0}, function(){ // this fetches the top clips every day 00:00
+  // fetchClips()
+});
+// or just call "fetchClips()" if you want to download directly
+fetchClips()
+
+
+// Choose clips amount:
+let clipsAmount = 5; // this will download top 5 clips to your "CLIPS" folder
+
+// Choose date:
+let clipsDate = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)).toISOString(); // From when clip was created, 24 Hours ago
+// let clipsDate = new Date(new Date().getTime() - (168 * 60 * 60 * 1000)).toISOString(); // From when clip was created, 7 days ago
+// let clipsDate = new Date(new Date().getTime() - (720 * 60 * 60 * 1000)).toISOString(); // From when clip was created, 30 Days ago
+// let clipsDate = new Date(new Date().getTime() - (8760 * 60 * 60 * 1000)).toISOString(); // From when clip was created, 1 Year ago
+
+// ############ CONFIGURATION ############
+
+
+
 
 
 // ########## FETCH GAMES ##########
@@ -88,17 +76,15 @@ const fetchTopGames = async (token) => {
 }
 
 const getAllGameClips = (token, gameIdList) => {
-  // Get 24 hours ago's date in RFC3339 format
-  const yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)).toISOString();
   // Se we can excecute another function right after lastIndex is fetched
   const gameListLength = gameIdList.length;
   for(let i = 0; i < gameIdList.length; i++) {
     // Excecute this function for every gameId
-    fetchTopGameClipsOfTheDay(token, gameIdList[i], yesterday, gameListLength)
+    fetchTopGameClipsOfTheDay(token, gameIdList[i], gameListLength)
   }
 }
 
-const fetchTopGameClipsOfTheDay = async (token, gameId, date, gameListLength) => {
+const fetchTopGameClipsOfTheDay = async (token, gameId, gameListLength) => {
   try {
     const config = {
       headers:{
@@ -106,7 +92,7 @@ const fetchTopGameClipsOfTheDay = async (token, gameId, date, gameListLength) =>
         "Client-Id": clientId
       }
     }
-    const res = await axios.get(`https://api.twitch.tv/helix/clips?game_id=${gameId}&started_at=${date}`, config)
+    const res = await axios.get(`https://api.twitch.tv/helix/clips?game_id=${gameId}&started_at=${clipsDate}`, config)
     for(let i = 0; i < 20; i++) {
       if(res.data.data[i] === undefined) continue;
       // Push top 5 clips and its views from a user
@@ -148,17 +134,15 @@ const fetchHandPickedUsers = async (token) => {
 }
 
 const getAllUserClips = (token, userIdList) => {
-  // Get 24 hours ago's date in RFC3339 format
-  const yesterday = new Date(new Date().getTime() - (24 * 60 * 60 * 1000)).toISOString();
     // Se we can excecute another function right after lastIndex is fetched
     const userListLength = userIdList.length;
   for(let i = 0; i < userIdList.length; i++) {
     // Excecute this function for every userId
-    fetchTopClipsOfTheDay(token, userIdList[i], yesterday, userListLength)
+    fetchTopClipsOfTheDay(token, userIdList[i],userListLength)
   }
 }
 
-const fetchTopClipsOfTheDay = async (token, userId, date, userListLength) => {
+const fetchTopClipsOfTheDay = async (token, userId, userListLength) => {
   try {
     const config = {
       headers:{
@@ -166,7 +150,7 @@ const fetchTopClipsOfTheDay = async (token, userId, date, userListLength) => {
         "Client-Id": clientId
       }
     }
-    const res = await axios.get(`https://api.twitch.tv/helix/clips?broadcaster_id=${userId}&started_at=${date}`, config)
+    const res = await axios.get(`https://api.twitch.tv/helix/clips?broadcaster_id=${userId}&started_at=${clipsDate}`, config)
     for(let i = 0; i < 5; i++) {
       if(res.data.data[i] === undefined) continue;
       // Push top 5 clips and its views from a user
@@ -201,42 +185,16 @@ const Combine = (gameClips, userClips) => {
   // Sort clips from most viewed to least viewed
   const clipsSort = clipsNoDuplicate.sort((a, b) => (a.views < b.views) ? 1 : -1)
   // Return the first 5 clips
-  const clipsReady = clipsSort.slice(0, 5);
+  const clipsReady = clipsSort.slice(0, clipsAmount);
 
-  avoidClipDuplicate(clipsReady)
-}
-
-
-function avoidClipDuplicate(clipsArray) {
-  let index = 0;
-  let finalUrl = "";
-  // If clip url already is in the saveClips array, go to the next array
-  for(let i = 0; i < clipsArray.length; i++) {
-    if(saveClips.includes(clipsArray[i].url)) {
-      index++
-    } else {
-      break
-    }
+  for(let i = 0; i < clipsAmount; i++) {
+    downloadClip(clipsReady[i].url)
   }
-
-  // Set final url, if somehow its undefined, return this function
-  finalUrl = clipsArray[index].url
-  if(finalUrl === "" || finalUrl === undefined) return; // failsafe
-
-  // Add array to savedClips
-  saveClips.unshift(finalUrl)
-  // Remove array index so it doesnt get too large
-  if(saveClips.length > 5) saveClips.pop()
-
-  downloadClip(finalUrl)
-
-  // Reset Script
-  reset()
+  console.log(`DOWNLOADING CLIPS...`)
 }
 
 
 
- 
 // Download the actual clips
 function downloadClip(url) {
   exec(`youtube-dl.exe -f best ${url}`, {cwd: `${__dirname}\\CLIPS`}, (err, stdout, stderr) => {
