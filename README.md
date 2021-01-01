@@ -6,5 +6,5 @@
 ## How to use
 1. First clone the project to your prefered text editor
 2. Go to your terminal and install all the modules with **npm install**
-3. In the **downloader.js** file make sure to put your clientId and ClientSecret from the [Twitch Console](https://dev.twitch.tv/console)
+3. In the **downloader.js** file make sure to put in your clientId and clientSecret from the [Twitch Console](https://dev.twitch.tv/console)
 4. Start the server with **node downloader.js**
