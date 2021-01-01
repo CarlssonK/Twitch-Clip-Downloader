@@ -3,7 +3,14 @@ const { exec } = require('child_process');
 const schedule = require("node-schedule")
 
 
-// DOWNLOAD TIMES
+
+// ############ CONFIGURATION ############
+
+// Create an application on https://dev.twitch.tv/console to get your client id and client secret
+const clientId = "your_client_id_here"
+const clientSecret = "your_client_secret_here" // note your client secret is private thus should not be shown to other people
+
+// EXECUTION TIMES
 schedule.scheduleJob({hour: 0, minute: 0}, function(){
   fetchClips()
 });
@@ -16,6 +23,9 @@ schedule.scheduleJob({hour: 12, minute: 0}, function(){
 schedule.scheduleJob({hour: 18, minute: 0}, function(){
   fetchClips()
 });
+
+// ############ CONFIGURATION ############
+
 
 
 
@@ -44,7 +54,7 @@ function reset() {
 const fetchClips = async () => {
   try {
     // First fetch access token so we can use the API
-    const res = await axios.post('https://id.twitch.tv/oauth2/token?client_id=str8k2ifmiexe3gqkd2ctq38pjhvoi&client_secret=sqhukdwucvdpjzdj997l3kq36y7whb&grant_type=client_credentials')
+    const res = await axios.post(`https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`)
     const token = res.data.access_token;
     // Chain of multiple functions, in the end, returns big list of top categoriy/game clips
     fetchTopGames(token);
@@ -63,7 +73,7 @@ const fetchTopGames = async (token) => {
     const config = {
       headers:{
         "Authorization": `Bearer ${token}`,
-        "Client-Id": "str8k2ifmiexe3gqkd2ctq38pjhvoi"
+        "Client-Id": clientId
       }
     }
     const res = await axios.get('https://api.twitch.tv/helix/games/top?first=20', config)
@@ -93,7 +103,7 @@ const fetchTopGameClipsOfTheDay = async (token, gameId, date, gameListLength) =>
     const config = {
       headers:{
         "Authorization": `Bearer ${token}`,
-        "Client-Id": "str8k2ifmiexe3gqkd2ctq38pjhvoi"
+        "Client-Id": clientId
       }
     }
     const res = await axios.get(`https://api.twitch.tv/helix/clips?game_id=${gameId}&started_at=${date}`, config)
@@ -123,7 +133,7 @@ const fetchHandPickedUsers = async (token) => {
     const config = {
       headers:{
         "Authorization": `Bearer ${token}`,
-        "Client-Id": "str8k2ifmiexe3gqkd2ctq38pjhvoi"
+        "Client-Id": clientId
       }
     }
     const res = await axios.get('https://api.twitch.tv/helix/users?login=xQcOW&login=shroud&login=Myth&login=Pokimane&login=sodapoppin&login=summit1g&login=NICKMERCS&login=TimTheTatman&login=loltyler1&login=Symfuhny&login=Lirik&login=Anomaly&login=Asmongold&login=Mizkif&login=HasanAbi&login=ludwig&login=moistcr1tikal&login=MitchJones&login=Nmplol&login=JakenBakeLIVE&login=Knut&login=Maya&login=pokelawls&login=itssliker&login=EsfandTV&login=erobb221&login=drdisrespect', config)
@@ -153,7 +163,7 @@ const fetchTopClipsOfTheDay = async (token, userId, date, userListLength) => {
     const config = {
       headers:{
         "Authorization": `Bearer ${token}`,
-        "Client-Id": "str8k2ifmiexe3gqkd2ctq38pjhvoi"
+        "Client-Id": clientId
       }
     }
     const res = await axios.get(`https://api.twitch.tv/helix/clips?broadcaster_id=${userId}&started_at=${date}`, config)
