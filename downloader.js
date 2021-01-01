@@ -11,8 +11,18 @@ let userCounter = 0;
 let gameCounter = 0;
 let isUserClipsFetched = false;
 let isGameClipsFetched = false;
+let clipsPath = 0;
 
 const fetchClips = async () => {
+  // Befor fetching clips reset everything to normal
+  userClips = [];
+  gameClips = [];
+  userCounter = 0;
+  gameCounter = 0;
+  isUserClipsFetched = false;
+  isGameClipsFetched = false;
+  clipsPath = 0;
+  makeFolder()
   console.log(`FETCHING CLIPS...`)
   try {
     // First fetch access token so we can use the API
@@ -155,7 +165,7 @@ const fetchTopClipsOfTheDay = async (token, userId, userListLength) => {
       }
     }
     const res = await axios.get(`https://api.twitch.tv/helix/clips?broadcaster_id=${userId}&started_at=${clipsDate}`, config)
-    for(let i = 0; i < 5; i++) {
+    for(let i = 0; i < 10; i++) {
       if(res.data.data[i] === undefined) continue;
       // Push top 5 clips and its views from a user
       userClips.push({url: res.data.data[i].url, views: res.data.data[i].view_count})
@@ -210,8 +220,6 @@ function downloadClip(url) {
 }
 
 
-let clipsPath = 0;
-makeFolder()
 function makeFolder() {
   clipsPath = 0;
   // Finds what the folder name should be called (in this case its integers that increments)
