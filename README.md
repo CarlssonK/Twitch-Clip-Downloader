@@ -1,7 +1,7 @@
 # twitch-clip-downloader
 
 ## Description
-**twitch-clip-downloader** uses the [Twitch API](https://dev.twitch.tv/docs/api) to gather the most viewed clip past 24 hours and downloads it to your computer using [youtube-dl](https://github.com/ytdl-org/youtube-dl)
+**twitch-clip-downloader** uses the [Twitch API](https://dev.twitch.tv/docs/api) to gather the most viewed clips and downloads them to your computer using [youtube-dl](https://github.com/ytdl-org/youtube-dl)
 
 ## How to use
 1. First clone the project to your prefered text editor
